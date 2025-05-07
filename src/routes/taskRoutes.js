@@ -12,6 +12,6 @@ router.post("/create-task", taskController.createTask);
 router.put("/update-task/:id", taskController.updateTask);
 router.delete("/delete-task/:id", taskController.deleteTask);
 router.get("/my-notification", taskController.myNotifications);
-router.get("/mark-as-read/:id", taskController.markAsRead);
+router.patch("/mark-as-read/:id", taskController.markAsRead);
 
 module.exports = router;
