@@ -21,7 +21,9 @@ app.use(helmet());
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
-
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 
