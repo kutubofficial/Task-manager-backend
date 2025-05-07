@@ -6,7 +6,7 @@ let MONGODB_ATLAS = process.env.MONGODB_ATLAS;
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(MONGODB_ATLAS);
+    await mongoose.connect(MONGODB_URI);
     console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("MongoDB connection error:", error);

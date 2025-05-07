@@ -1,7 +1,8 @@
+const mongoose = require("mongoose");
 const Task = require("../models/Task");
 const User = require("../models/User");
 const sendNotification = require("../utils/sendNotification");
-const Notification = require('../models/Notification');
+const Notification = require("../models/Notification");
 
 const getTasks = async (req, res) => {
   try {
@@ -17,22 +18,25 @@ const getTasks = async (req, res) => {
 const getDashboardTasks = async (req, res) => {
   try {
     const userId = req.user._id;
-    const [assignedTasks, createdTasks, overdueTasks, completedTask] = await Promise.all([
-      Task.find({ assignedTo: userId })
-        .populate("createdBy", "name email")
-        .populate("assignedTo", "name email"),
-      Task.find({ createdBy: userId })
-        .populate("createdBy", "name email")
-        .populate("assignedTo", "name email"),
-      Task.find({
-        assignedTo: userId,
-        dueDate: { $lt: new Date() },
-        status: { $ne: "completed" },
-      })
-        .populate("createdBy", "name email")
-        .populate("assignedTo", "name email"),
-    ]);
-    res.status(200).json({ assignedTasks, createdTasks, overdueTasks, completedTask });
+    const [assignedTasks, createdTasks, overdueTasks, completedTask] =
+      await Promise.all([
+        Task.find({ assignedTo: userId })
+          .populate("createdBy", "name email")
+          .populate("assignedTo", "name email"),
+        Task.find({ createdBy: userId })
+          .populate("createdBy", "name email")
+          .populate("assignedTo", "name email"),
+        Task.find({
+          assignedTo: userId,
+          dueDate: { $lt: new Date() },
+          status: { $ne: "completed" },
+        })
+          .populate("createdBy", "name email")
+          .populate("assignedTo", "name email"),
+      ]);
+    res
+      .status(200)
+      .json({ assignedTasks, createdTasks, overdueTasks, completedTask });
   } catch (err) {
     res.status(500).json({ error: "Failed to get dashboard tasks" });
   }
@@ -51,13 +55,13 @@ const createTask = async (req, res) => {
     description,
     dueDate,
     priority,
-    createdBy: req.user._id,
+    createdBy: req?.user?._id,
     assignedTo,
   });
 
   await sendNotification({
     recipient: assignedTo,
-    sender: req.user._id,
+    sender: req?.user?._id,
     task: task._id,
     message: `You have been assigned a new task: "${title}"`,
   });
@@ -99,12 +103,12 @@ const updateTask = async (req, res) => {
       new: true,
       runValidators: true,
     })
-      .populate('createdBy', 'name email')
-      .populate('assignedTo', 'name email');
+      .populate("createdBy", "name email")
+      .populate("assignedTo", "name email");
 
     res.status(200).json(updatedTask);
   } catch (error) {
-    console.error('Update Task Error:', error.message);
+    console.error("Update Task Error:", error.message);
     res.status(500).json({ error: "Failed to update task" });
   }
 };
@@ -157,43 +161,32 @@ const searchTasks = async (req, res) => {
 
 const myNotifications = async (req, res) => {
   try {
-    const noti = await Notification.find();
+    const userCond = { recipient: new mongoose.Types.ObjectId(req.user._id) };
+    const noti = await Notification.find(userCond);
     if (!noti || noti.length === 0) {
-      return res.status(404).json({ message: 'No active notifications found' });
+      return res.status(404).json({ message: "No active notifications found" });
     }
     res.status(200).json(noti || []);
   } catch (error) {
-    console.error('Error fetching notifications:', error);
-    res.status(500).json({ message: 'Failed to fetch notifications' });
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({ message: "Failed to fetch notifications" });
   }
 };
 
-const isNotificationRead = async (req, res) => {
+const markAsRead = async (req, res) => {
   try {
-    const notificationId = req.params.id;
-    // console.log(notificationId);
-
     const updatedNotification = await Notification.findByIdAndUpdate(
-      notificationId,
+      { _id: req.params.id },
       { isRead: true },
       { new: true, runValidators: true }
     );
-
-    // await Notification.updateOne({
-    //   notificationId,
-    //   $set: {
-    //     isRead: true
-    //   }
-    // })
-
     if (!updatedNotification) {
-      return res.status(404).json({ message: 'Notification not found' });
+      return res.status(404).json({ message: "Notification not found" });
     }
-
     res.status(200).json({ message: "Marked as read", updatedNotification });
   } catch (error) {
-    console.error('Error marking notification as read:', error);
-    res.status(500).json({ message: 'Failed to mark notification as read' });
+    console.error("Error marking notification as read:", error);
+    res.status(500).json({ message: "Failed to mark notification as read" });
   }
 };
 
@@ -205,7 +198,5 @@ module.exports = {
   deleteTask,
   searchTasks,
   myNotifications,
-  isNotificationRead
+  markAsRead,
 };
-
-

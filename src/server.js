@@ -4,7 +4,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
-const errorHandler = require('./middleware/errorHandler');
+const errorHandler = require("./middleware/errorHandler");
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 
@@ -16,13 +16,20 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
+
+/* app.use(cors({
+  origin: 'https://your-frontend-domain.netlify.app', // replace with actual Netlify/Vercel URL
+  credentials: true, // 🔑 allow cookies
+}));
+*/
+
 app.use(helmet());
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
-app.get('/', (req, res) => {
-  res.send('API is running...');
+app.get("/", (req, res) => {
+  res.send("API is running...");
 });
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
